@@ -1,0 +1,45 @@
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+    </plugin-info>
+
+    <resource type="i18n" name="i18n" location="i18n.issuecloner"/>
+
+    <web-section key="mailru-admin-section" name="Mail.Ru Section" location="system.admin"
+                 i18n-name-key="mailru-issuecloner.section" weight="900">
+        <label key="mailru-issuecloner.section"/>
+        <description>Mail.Ru Section Descitption</description>
+    </web-section>
+
+    <web-item key="mailru-issue-cloner-configuration" name="Mail.Ru Issue Cloner configuration link" section="system.admin/mailru-admin-section" weight="95">
+        <label key="mailru-issuecloner.configure"/>
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+            <param name="permission">admin</param>
+        </condition>
+        <link linkId="mailru-issue-cloner-configuration_link">/secure/MailRuIssueClonerConfig!default.jspa</link>
+    </web-item>
+
+    <webwork1 key="mailru-issue-cloner-conf" name="Mail.Ru Issue Cloner configuration" class="java.lang.Object">
+        <actions>
+            <action name="ru.mail.jira.plugins.IssueClonerConfig" alias="MailRuIssueClonerConfig">
+                <view name="input">/templates/issueclonercfg.vm</view>
+                <view name="success">/templates/issueclonercfg.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <webwork1 key="mailru-issue-cloner-issue-details" name="Mail.Ru Issue Cloner Issue Details" class="java.lang.Object">
+        <actions>
+            <action name="ru.mail.jira.plugins.CloneCompCreateDetails" alias="CreateIssueDetails">
+                <view name="error">/secure/views/createissue-details.jsp</view>
+                <view name="input">/secure/views/createissue-details.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <component key="mailru-issue-cloner-config" name="Mail.Ru Issue Cloner Plug-In configuration" class="ru.mail.jira.plugins.CloneCompMgrImpl"/>
+    <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+</atlassian-plugin>

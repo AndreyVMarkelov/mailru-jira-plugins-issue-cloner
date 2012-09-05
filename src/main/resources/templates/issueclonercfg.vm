@@ -1,0 +1,40 @@
+## Created by Andrey Markelov 06-09-2012.
+## Copyright Mail.Ru Group 2012. All rights reserved.
+<html>
+    <head>
+        <title>$i18n.getText("mailru-issuecloner.configure")</title>
+        <meta name="decorator" content="admin"/>
+        $webResourceManager.requireResource("jira.webresources:global-static")
+        $webResourceManager.requireResource("jira.webresources:jira-global")
+        $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+    </head
+    <body class="aui">
+        #if($action.hasAdminPermission())
+        #if ($saved)
+        <div class="aui-message closeable shadowed">
+            <p class="title"><span class="aui-icon icon-success"></span><strong>$action.getText("mailru-issuecloner.success.text")</strong></p>
+        </div>
+        #end
+        <h2>$action.getText("mailru-issuecloner.formtitle")</h2>
+        <form class="aui" onsubmit="if (this.submitted) return false; this.submitted = true; return true"
+              name="jiraform" method="post" action="MailRuIssueClonerConfig.jspa">
+            <div class="field-group">
+                <label for="selectedProjKeys">$action.getText("mailru-issuecloner.selectprojects")</label>
+                <select multiple="" size="10" id="selectedProjKeys" name="selectedProjKeys">
+                #foreach ($proj in $action.getAllProjects().entrySet())
+                    <option value="$proj.key" #if ($savedProjKeys.contains($proj.key)) selected="selected" #end>$proj.value</option>
+                #end
+                </select>
+            </div>
+            <div class="buttons-container">
+                <div class="buttons">
+                    <input class="button submit" type="submit" name="add" value="$action.getText("common.words.save")" accesskey="S" title="Press Alt+Shift+S to submit form"/>
+                    <input class="button submit" id="cancelButton" type="button" accesskey="`" title="Cancel (Alt+Shift + `)" name="Cancel" value="$action.getText("common.words.cancel")" onclick="location.href='$baseUrl/secure/project/ViewProjects.jspa'"/>
+                </div>
+            </div>
+        </form>
+        #else
+        <div class="errorArea">$action.getText("mailru-issuecloner.admin.link.error")</div>
+        #end
+    </body>
+</html>
