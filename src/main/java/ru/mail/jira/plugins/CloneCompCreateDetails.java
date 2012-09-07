@@ -22,6 +22,9 @@ import com.atlassian.jira.issue.IssueFactory;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.attachment.Attachment;
 import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.link.IssueLinkType;
+import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.util.AttachmentUtils;
 import com.atlassian.jira.web.action.issue.CreateIssueDetails;
 import com.atlassian.jira.web.action.issue.IssueCreationHelperBean;
@@ -38,6 +41,11 @@ extends CreateIssueDetails
      * Unique ID.
      */
     private static final long serialVersionUID = 4922348018971733978L;
+
+    /**
+     * Link type.
+     */
+    private static final String LINK_TYPE = "Depends";
 
     /**
      * Plug-In data manager.
@@ -61,7 +69,7 @@ extends CreateIssueDetails
     protected String doExecute()
     throws Exception
     {
-        boolean applyPlugin = this.isApplyPlugin(getProject().getLong("id"));
+        boolean applyPlugin = isApplyPlugin(getProject().getLong("id"));
 
         if (!applyPlugin)
         {
@@ -192,6 +200,30 @@ extends CreateIssueDetails
                         File newFile = new File(attFile.getAbsolutePath() + nissue.getKey());
                         FileUtils.copyFile(attFile, newFile);
                         am.createAttachment(newFile, filename, contentType, getLoggedInUser(), nissue.getGenericValue(), null, createTime);
+                    }
+                }
+            }
+
+            IssueLinkTypeManager issueLinkTypeManager = ComponentManager.getComponentInstanceOfType(IssueLinkTypeManager.class);
+            Collection<IssueLinkType> types = issueLinkTypeManager.getIssueLinkTypesByName(LINK_TYPE);
+            if (types == null || types.isEmpty())
+            {
+                return rc_str;
+            }
+
+            IssueLinkType ilt = types.iterator().next();
+            if (ilt != null)
+            {
+                IssueLinkManager ilm = ComponentManager.getInstance().getIssueLinkManager();
+                for (MutableIssue nissue : newIssues)
+                {
+                    try
+                    {
+                        ilm.createIssueLink(nissue.getId(), issue.getId(), ilt.getId(), null, getLoggedInUser());
+                    }
+                    catch (CreateException crex)
+                    {
+                        //--> nothing
                     }
                 }
             }
