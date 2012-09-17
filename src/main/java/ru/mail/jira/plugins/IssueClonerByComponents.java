@@ -8,17 +8,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
-import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.ComponentManager;
+import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.exception.CreateException;
@@ -32,15 +31,22 @@ import com.atlassian.jira.issue.link.IssueLinkType;
 import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.util.AttachmentUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
- * 
+ *Event listener.
  * 
  * @author Andrey Markelov
  */
 public class IssueClonerByComponents
     implements InitializingBean, DisposableBean
 {
+    /*
+     * Logger.
+     */
+    private static Log log = LogFactory.getLog(IssueClonerByComponents.class);
+
     /**
      * Link type.
      */
@@ -114,7 +120,7 @@ public class IssueClonerByComponents
         }
 
         Issue issue = issueEvent.getIssue();
-        Collection<GenericValue> comps = issue.getComponents();
+        Collection<ProjectComponent> comps = issue.getComponentObjects();
         if (comps == null || comps.size() < 2)
         {
             return;
@@ -126,9 +132,9 @@ public class IssueClonerByComponents
             return;
         }
 
-        List<MutableIssue> newIssues = new ArrayList<MutableIssue>();
-        GenericValue gv = null;
-        Iterator<GenericValue> iter = comps.iterator();
+        List<Issue> newIssues = new ArrayList<Issue>();
+        ProjectComponent gv = null;
+        Iterator<ProjectComponent> iter = comps.iterator();
         while (iter.hasNext())
         {
             gv = iter.next();
@@ -147,16 +153,16 @@ public class IssueClonerByComponents
                 nissue.setIssueTypeId(issue.getIssueTypeObject().getId());
             }
             //--> components
-            Collection<GenericValue> nComps = new LinkedList<GenericValue>();
+            Collection<ProjectComponent> nComps = new LinkedList<ProjectComponent>();
             nComps.add(gv);
-            nissue.setComponents(nComps);
+            nissue.setComponentObjects(nComps);
             //--> assignee
-            String compLead = gv.getString("lead");
+            String compLead = gv.getLead();
             nissue.setAssigneeId(compLead);
             //--> reporter
             nissue.setReporter(issueEvent.getUser());
             //--> priority
-            nissue.setPriority(issue.getPriority());
+            nissue.setPriorityObject(issue.getPriorityObject());
             //--> description
             nissue.setDescription(issue.getDescription());
             //--> env
@@ -207,16 +213,13 @@ public class IssueClonerByComponents
             //--> create issue
             try
             {
-                ComponentManager.getInstance().getIssueManager().createIssue(issueEvent.getUser(), nissue);
+                Issue newIssueObj = ComponentManager.getInstance().getIssueManager().createIssueObject(issueEvent.getUser(), nissue);
+                newIssues.add(newIssueObj);
             }
             catch (CreateException crex)
             {
-                crex.printStackTrace();
-             //   addErrorMessage(crex.getMessage());
-             //   return ERROR;
+                log.error("IssueClonerByComponents::onIssueEvent - Cannot create dependent issues", crex);
             }
-
-            newIssues.add(nissue);
         }
 
         Collection<Attachment> atts = issue.getAttachments();
@@ -228,35 +231,34 @@ public class IssueClonerByComponents
                 File attFile = AttachmentUtils.getAttachmentFile(att);
                 String filename = att.getFilename();
                 String contentType = att.getMimetype();
-                Date createTime = att.getCreated();
-                for (MutableIssue nissue : newIssues)
+                for (Issue nissue : newIssues)
                 {
                     File newFile = new File(attFile.getAbsolutePath() + nissue.getKey());
                     try
                     {
                         FileUtils.copyFile(attFile, newFile);
-                        am.createAttachment(newFile, filename, contentType, issueEvent.getUser(), nissue.getGenericValue(), null, createTime);
+                        am.createAttachment(newFile, filename, contentType, issueEvent.getUser(), nissue);
                     }
                     catch (Exception ex)
                     {
-                        //--> 
+                        log.error("IssueClonerByComponents::onIssueEvent - Cannot copy attachment", ex);
                     }
                 }
             }
         }
 
- /*       IssueLinkTypeManager issueLinkTypeManager = ComponentManager.getComponentInstanceOfType(IssueLinkTypeManager.class);
+        IssueLinkTypeManager issueLinkTypeManager = ComponentManager.getComponentInstanceOfType(IssueLinkTypeManager.class);
         Collection<IssueLinkType> types = issueLinkTypeManager.getIssueLinkTypesByName(LINK_TYPE);
         if (types == null || types.isEmpty())
         {
-            //return rc_str;
+            return;
         }
 
         IssueLinkType ilt = types.iterator().next();
         if (ilt != null)
         {
             IssueLinkManager ilm = ComponentManager.getInstance().getIssueLinkManager();
-            for (MutableIssue nissue : newIssues)
+            for (Issue nissue : newIssues)
             {
                 try
                 {
@@ -264,9 +266,9 @@ public class IssueClonerByComponents
                 }
                 catch (CreateException crex)
                 {
-                    //--> nothing
+                    log.error("IssueClonerByComponents::onIssueEvent - Cannot create link", crex);
                 }
             }
-        }*/
+        }
     }
 }
