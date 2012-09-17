@@ -4,10 +4,12 @@
     <head>
         <title>$i18n.getText("mailru-issuecloner.configure")</title>
         <meta name="decorator" content="admin"/>
+        <meta name="admin.active.section" content="admin_plugins_menu/mailru-admin-section">
+        <meta name="admin.active.tab" content="mailru-issue-cloner-configuration">
         $webResourceManager.requireResource("jira.webresources:global-static")
         $webResourceManager.requireResource("jira.webresources:jira-global")
         $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
-    </head
+    </head>
     <body class="aui">
         #if($action.hasAdminPermission())
         #if ($saved)

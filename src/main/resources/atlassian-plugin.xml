@@ -7,18 +7,61 @@
 
     <resource type="i18n" name="i18n" location="i18n.issuecloner"/>
 
-    <web-section key="mailru-admin-section" name="Mail.Ru Section" location="system.admin"
-                 i18n-name-key="mailru-issuecloner.section" weight="900">
-        <label key="mailru-issuecloner.section"/>
+    <web-section key="mailru-admin-section_old" name="Link New Issue Operation - Configuration" location="system.admin" weight="20">
         <description>Mail.Ru Section Descitption</description>
+        <label key="mailru-issuecloner.section"/>
+        <conditions type="AND">
+            <condition class="ru.mail.jira.plugins.IsPriorToJiraVersion">
+                <param name="majorVersion">4</param>
+                <param name="minorVersion">4</param>
+            </condition>
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+                <param name="permission">admin</param>
+            </condition>
+        </conditions>
     </web-section>
 
-    <web-item key="mailru-issue-cloner-configuration" name="Mail.Ru Issue Cloner configuration link" section="system.admin/mailru-admin-section" weight="95">
+    <web-item key="mailru-issue-cloner-configuration_old" name="Mail.Ru Issue Cloner configuration link" section="system.admin/mailru-admin-section_old" weight="95">
         <label key="mailru-issuecloner.configure"/>
-        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
-            <param name="permission">admin</param>
-        </condition>
-        <link linkId="mailru-issue-cloner-configuration_link">/secure/MailRuIssueClonerConfig!default.jspa</link>
+        <conditions type="AND">
+            <condition class="ru.mail.jira.plugins.IsPriorToJiraVersion">
+                <param name="majorVersion">4</param>
+                <param name="minorVersion">4</param>
+            </condition>
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+                <param name="permission">admin</param>
+            </condition>
+        </conditions>
+        <link linkId="mailru-issue-cloner-configuration_old">/secure/MailRuIssueClonerConfig!default.jspa</link>
+    </web-item>
+
+    <web-section key="mailru-admin-section" name="Mail.Ru Section" location="admin_plugins_menu"
+                 i18n-name-key="mrim.base.section" weight="900">
+        <label key="mailru-issuecloner.section"/>
+        <description>Mail.Ru Section Descitption</description>
+        <conditions type="AND">
+            <condition class="ru.mail.jira.plugins.IsAtLeastJiraVersion">
+                <param name="majorVersion">4</param>
+                <param name="minorVersion">4</param>
+            </condition>
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+                <param name="permission">admin</param>
+            </condition>
+        </conditions>
+    </web-section>
+
+    <web-item key="mailru-issue-cloner-configuration" name="MRIM configuration link on administrators page" section="admin_plugins_menu/mailru-admin-section" weight="95">
+        <label key="mailru-issuecloner.configure"/>
+        <conditions type="AND">
+            <condition class="ru.mail.jira.plugins.IsAtLeastJiraVersion">
+                <param name="majorVersion">4</param>
+                <param name="minorVersion">4</param>
+            </condition>
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+                <param name="permission">admin</param>
+            </condition>
+        </conditions>
+        <link linkId="mailru-issue-cloner-configuration">/secure/MailRuIssueClonerConfig!default.jspa</link>
     </web-item>
 
     <webwork1 key="mailru-issue-cloner-conf" name="Mail.Ru Issue Cloner configuration" class="java.lang.Object">
@@ -30,16 +73,9 @@
         </actions>
     </webwork1>
 
-    <webwork1 key="mailru-issue-cloner-issue-details" name="Mail.Ru Issue Cloner Issue Details" class="java.lang.Object">
-        <actions>
-            <action name="ru.mail.jira.plugins.CloneCompCreateDetails" alias="CreateIssueDetails">
-                <view name="error">/secure/views/createissue-details.jsp</view>
-                <view name="input">/secure/views/createissue-details.jsp</view>
-            </action>
-        </actions>
-    </webwork1>
-
     <component key="mailru-issue-cloner-config" name="Mail.Ru Issue Cloner Plug-In configuration" class="ru.mail.jira.plugins.CloneCompMgrImpl"/>
+    <component key="mailru-issue-cloner-listener" name="Mail.Ru Issue Cloner Plug-In event listener" class="ru.mail.jira.plugins.IssueClonerByComponents"/>
     <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
     <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+    <component-import key="eventPublisher" interface="com.atlassian.event.api.EventPublisher"/>
 </atlassian-plugin>
