@@ -141,7 +141,7 @@ public class IssueClonerByComponents
 
             MutableIssue nissue = ComponentManager.getInstance().getIssueFactory().getIssue();
             //--> summary
-            nissue.setSummary(issue.getSummary());
+            nissue.setSummary(String.format("[%s] %s", gv.getName(), issue.getSummary()));
             //--> project
             if (issue.getProjectObject() != null)
             {
@@ -262,7 +262,7 @@ public class IssueClonerByComponents
             {
                 try
                 {
-                    ilm.createIssueLink(nissue.getId(), issue.getId(), ilt.getId(), null, issueEvent.getUser());
+                    ilm.createIssueLink(issue.getId(), nissue.getId(), ilt.getId(), null, issueEvent.getUser());
                 }
                 catch (CreateException crex)
                 {
